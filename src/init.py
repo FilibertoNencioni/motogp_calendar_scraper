@@ -55,6 +55,8 @@ def main():
         except Exception as db_ex:
             connection.rollback()
             raise db_ex
+        
+        ResourceFactory.get_logger().log("The program ended successfully!", LogType.INFO)
 
 
 
