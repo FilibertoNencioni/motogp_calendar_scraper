@@ -6,23 +6,51 @@ from dotenv import load_dotenv
 import sys
 import traceback
 import datetime
+import urllib.robotparser
+
 
 def main():
     #Initialize .env file
     load_dotenv()
 
+    #Initialize parser for robots.txt (what you as a robot can do according to tv8 policy)
+    rp = urllib.robotparser.RobotFileParser()
+
     ResourceFactory.get_logger().log("STARTED")
 
     try:
-
         base_url = 'https://www.tv8.it'
-        url = base_url+'/sport/motogp/calendario'
 
+        #Read robots.txt file 
+        rp.set_url(f"{base_url}/robots.txt")
+        rp.read()
+
+        #Log Robots.txt last modified 
+        robots_last_modified = datetime.datetime.fromtimestamp(rp.modified()) if rp.modified() != None else None
+        ResourceFactory.get_logger().log(f"TV8 ROBOTS LAST MODIFIED IN {robots_last_modified or "NOT SPECIFIED"}", LogType.INFO)
+
+        #Parse the calendar where all the GP are scheduled
+        url = f"{base_url}/sport/motogp/calendario"
         scraper = ScraperUtils()
 
+        #Check if I can parse those information
+        if not rp.can_fetch(url=url, useragent="*"):
+            ResourceFactory.get_logger().log("Cannot read the calendar shedules due to robots.txt", LogType.WARN)
+            return
+        
+        #If I'm here I can scrape the information on that URL
         links = scraper.extract_gran_prix_links(url)
-
         for link in links:
+            event_link = f"{base_url}{link['link']}"
+            
+            #Check if I can parse this informations
+            if not rp.can_fetch(url=event_link, useragent="*"):
+                msg = "Cannot read the event link due to robots.txt.\n"
+                msg += f"\t\turl: {event_link}"
+                ResourceFactory.get_logger().log(msg, LogType.WARN)
+                return
+            
+            #Scrape the dates from the link
             events = scraper.extract_dates_from_page(base_url+link['link'])
             link['events'] = events
 
