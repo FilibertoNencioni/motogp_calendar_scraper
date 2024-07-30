@@ -84,6 +84,9 @@ def main():
             connection.rollback()
             raise db_ex
         
+        #MANAGE DELETE LOGS
+        ResourceFactory.get_logger().clear_logs()
+        
         ResourceFactory.get_logger().log("The program ended successfully!", LogType.INFO)
 
 
