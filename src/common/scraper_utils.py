@@ -2,8 +2,8 @@ import requests
 import dateparser
 from bs4 import BeautifulSoup
 import re
-from resource_factory import ResourceFactory
-from logger import LogType
+from common.resource_factory import ResourceFactory
+from common.logger import LogType
 
 class ScraperUtils:
     time_pattern = re.compile(r'^\d{2}:\d{2}$')

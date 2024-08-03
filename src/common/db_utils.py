@@ -1,6 +1,6 @@
 from sqlite3 import Cursor
-from resource_factory import ResourceFactory
-from logger import LogType
+from common.resource_factory import ResourceFactory
+from common.logger import LogType
 import datetime
 
 class DbUtils:

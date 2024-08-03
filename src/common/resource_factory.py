@@ -1,4 +1,4 @@
-from logger import Logger, LogType
+from common.logger import Logger, LogType
 import sqlite3
 import os
 
