@@ -6,6 +6,7 @@ from common.resource_factory import ResourceFactory
 from common.logger import LogType
 
 class ScraperUtils:
+    #TODO: spostare tutto ciò che esiste in questa classe in "tv8_service"
     time_pattern = re.compile(r'^\d{2}:\d{2}$')
 
     def __init__(self) -> None:
@@ -20,12 +21,12 @@ class ScraperUtils:
             else:
                 raise Exception(f"Failed to retrieve the webpage. Status code: {response.status_code}")
 
-        except Exception as e:
+        except:
             msg = "An error occurred while retriving the HTML page\n"
             msg += f"\t\turl: {url}"
 
             ResourceFactory.logger.log(msg, LogType.ERROR)
-            raise e
+            raise
 
     def extract_gran_prix_links(self, url):
         try:  
@@ -72,12 +73,12 @@ class ScraperUtils:
                     links.append(tmp)
             
             return links
-        except Exception as e:
+        except:
             msg = "An error occurred while trying to retrieve all the races calendar links\n"
             msg += f"\t\turl: {url}"
 
             ResourceFactory.get_logger().log(msg, LogType.ERROR)
-            raise e
+            raise
     
     def extract_dates_from_page(self, url: str):
         try:
@@ -147,12 +148,12 @@ class ScraperUtils:
                 race_obj[tmp_date]['events']=race_dates
 
             return race_obj
-        except Exception as e:
+        except:
             msg = "An error occurred while trying to exctract the events on a race calendar page\n"
             msg += f"\t\turl: {url}"
 
             ResourceFactory.get_logger().log(msg, LogType.ERROR)
-            raise e
+            raise
 
     def __check_if_str_is_time(self, text: str):
         if str is None or str == "":

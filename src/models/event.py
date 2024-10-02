@@ -23,3 +23,18 @@ class Event:
         self.end_date = end_date
         self.doi = doi
         self.dou = dou
+
+    @staticmethod
+    def from_motogp_service(parsed_json: dict, fk_circuit: int):
+        return Event(
+            pk_event=0,
+            fk_circuit=fk_circuit,
+            guid=parsed_json["id"],
+            name=str(parsed_json["name"]).strip(),
+            kind=parsed_json["kind"],
+            season= str(parsed_json["season"]["year"]),
+            start_date=datetime.fromisoformat(parsed_json["date_start"]),
+            end_date=datetime.fromisoformat(parsed_json["date_end"]),
+            doi=None,
+            dou=None
+        )

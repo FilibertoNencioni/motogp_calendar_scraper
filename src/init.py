@@ -11,19 +11,15 @@ def main():
     load_dotenv()
 
     ResourceFactory.get_logger().log("STARTED")
-
     try:
         MotoGpService.execute()
-        # Tv8Service.execute()
+        Tv8Service.execute()
 
         #MANAGE DELETE LOGS
         ResourceFactory.get_logger().clear_logs()
 
         ResourceFactory.get_logger().log("The program ended successfully!", LogType.INFO)
-
-
-
-    except Exception as e:
+    except:
         # Get current system exception
         ex_type, ex_value, ex_traceback = sys.exc_info()
 
@@ -42,11 +38,6 @@ def main():
         logger_msg += f"\t\tStack Trace: {stack_trace}"
 
         ResourceFactory.get_logger().log(logger_msg, LogType.ERROR)
-
-
-
-
-
 
 
 if __name__ == "__main__":
