@@ -5,7 +5,7 @@ from common.resource_factory import ResourceFactory
 
 class Utils:
     @staticmethod
-    def get_html_content(self, url):
+    def get_html_content(url):
         try:
             # Function to get HTML content from a URL
             response = requests.get(url)
