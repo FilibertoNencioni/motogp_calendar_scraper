@@ -1,28 +1,63 @@
-# MotoGP calendar TV8 scraper
+# MotoGP calendar scraper
 
 ## Introduction
 
-MotoGP calendar TV8 scraper is a python function that scrapes all the information from the TV8 website about their scheduling of MotoGP events and saves them in a SQLite DB.
+MotoGP calendar scraper is a Python function that collects and aggregates all the MotoGP broadcasts emitted by the official broadcaster and other private / public broadcasters.
+
+All the information this process saves is meant to be displayed by a mobile application, where everyone can see if their provider will broadcast the event live or not and at what time.
+
+This project is meant to be open and accessible to everyone, so that everyone (within the respect of the laws) will scrape all the MotoGP broadcasters events and saves them ready to be viewed by the users.
 
 ## Functioning
 
-This process is very simple and it's made possible by the __beautifulsoup4__ python package. It starts from the TV8 MotoGP main page and then scrapes all the events scheduled by the keyword "Gran Premio".
+It works through "processes" where everyone identifies a different broadcaster. The first and main process is the [MotoGP service](./src/services/motogp_service.py) which will save (or update) all the main broadcasts and additional info such as circuit details, etc. Only when this has finished will all the other "side" processes start.
 
-Then searches for each of that GP events the link of the GP and scrape the event information from that page.
+Those processes *can only obtain broadcast information* and save it in the **Broadcast** table (attached to its corresponding event).
 
-At the end all the data extracted from the website will be saved in a SQLite DB. SQLite has been choosed due to the limited capacity of the server where this process will run. If, by any reason, there is someone that wants to implements other DB connections and integrations it's well accepted.
+The lifecycle of the main and sub processes will be logged in a file. This file, suffix and location can be specified in the [**.env file**](.env.test) file.
+The log files will not be deleted automatically (unless a retention policy is specified in the .env file) and for each new day of execution, a new file will be created.
 
-The lifecycle of this process will be logged in a file. This file, suffix and location, can be specified in the __.env__ file (as for the SQLite DB file).
-The log files will not be deleted automatically and for each new day of execution will be created a new file.
+## Prerequisites
+
+* MySQL DB (tested with v8.4)
+* Python (tested with v3.12.3)
+
+## Setup
+
+### Database
+
+Make sure you have a MySQL instance running and all the connection details are typed in the environment file. Then check if your database structure corresponds to the one written [here](./sql/init-db.sql).
+
+### Python requirements
+
+You can install Python packages using [requirements file](./requirements.txt) by typing the following command in the root folder of this project.
+
+```shell
+pip install -r ./requirements.txt
+```
 
 ## Environment file
 
-You need to adjust the __.env__ file for the process to run successfully. This has a few configuration:
+You need to adjust the __.env__ file for the process to run successfully. This has a few configurations:
 
-* __LOG_PATH__, the absolute path where the LOGS are going to be saved.
-* __LOG_FILE_SUFFIX__, the suffix of the log file (es. 2024-07-28-SUFFIX.log).
-* __SQLITE_DB_PATH__, the absolute path where the SQLite DB path is located. If none it's specified or the directory is empty a new one will be created.
+### Logs
+
+* LOG_PATH, *Path where the log files have to be saved*
+* LOG_FILE_SUFFIX, ***optional**, Those log files are saved daily with a date prefix in the format "yyyy-mm-dd", If you want to add some text after the date, you can specify it here*
+* LOG_DAYS_RETENTION, ***optional**, Indicates the date range you want to keep the logs, it must be expressed as a number of days (int), for example, 30 (for a month)*
+* LOG_MAX_FILES= ***optional**, Indicates the maximum number of log files you want to keep*
+
+### Database
+
+* DB_HOST=
+* DB_USER=
+* DB_PASSWORD=
+* DB_NAME=
+
+### Misc
+
+* ASSETS_FOLDER_PATH, *At the moment, this is not managed*
 
 ## Legal
 
-This function, before scraping any data, will search in the __robots.txt__ file if it can parse any of the requested page.
+This function, before scraping any data, will search in the **robots.txt** file to see if it can parse any of the requested pages.

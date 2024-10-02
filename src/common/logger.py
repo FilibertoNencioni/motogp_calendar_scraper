@@ -68,9 +68,9 @@ class Logger:
 
             self.log("Ended process (Managing old logs file)", LogType.INFO)
 
-        except Exception as e:
+        except:
             self.log("Error during the cleaning process of logs files", LogType.ERROR)
-            raise e
+            raise
 
 
 
@@ -103,13 +103,13 @@ class Logger:
 
                     self.log(f"\tDeleted log {log} in {path_to_delete}", LogType.INFO)
 
-        except Exception as e:
+        except:
             msg = "Error getting the logs file older than n days.\n"
             msg += f"\t\tall_logs: {", ".join(all_logs)}\n"
             msg += f"\t\tdate: {date.strftime("%Y-%m-%d")}\n"
             msg += f"\t\tdays_to_keep: {days_to_keep}"
             self.log(msg, LogType.ERROR)
-            raise e
+            raise
         
 
     def __clear_logs_delete_log_older_than(self, all_logs: list[str], max_files:int) -> None:
@@ -129,10 +129,10 @@ class Logger:
 
                 self.log(f"\tDeleted log {log} in {path_to_delete}", LogType.INFO)
 
-        except Exception as e:
+        except:
             msg = "Error getting the logs file older than n days.\n"
             msg += f"\t\tall_logs: {", ".join(all_logs)}\n"
             msg += f"\t\tmax_files: {max_files}"
             self.log(msg, LogType.ERROR)
-            raise e
+            raise
         
