@@ -41,20 +41,33 @@ class DbUtils:
 
             circuit_exists = res is not None
             if circuit_exists:
-                #TODO: manage overriding flag and placeholder paths if newer ones are NOT available
-                #UPDATE DATA (even if it's not changed)
+                #UPDATE DATA - even if it's not changed, except for FLAG and PLACEHOLDER paths
+                #those will be updated only if the incoming data is not None
                 sql = """
                     UPDATE CIRCUIT
                     SET
                         NAME = %s,
                         COUNTRY = %s,
-                        FLAG_PATH = %s,
-                        PLACEHOLDER_PATH = %s,
+                        {u1}
+                        {u2}
                         DOU = CURRENT_TIMESTAMP
                     WHERE
                         PK_CIRCUIT = %s
-                """
-                cursor.execute(sql, (circuit.name, circuit.country, circuit.flag_path, circuit.placeholder_path, res[0]))
+                """.format(
+                    u1 = "FLAG_PATH = %s," if circuit.flag_path is not None else "" ,
+                    u2 = "PLACEHOLDER_PATH = %s," if circuit.placeholder_path is not None else ""
+                )
+
+                data: tuple = (circuit.name, circuit.country,)
+
+                if circuit.flag_path is not None:
+                    data += (circuit.flag_path,)
+
+                if circuit.placeholder_path is not None:
+                    data += (circuit.placeholder_path,)
+
+                data += (res[0],)
+                cursor.execute(sql, data)
                 
                 return res[0]
             else:
