@@ -202,11 +202,16 @@ class DbUtils:
                         FK_BROADCASTER = %s 
                         AND FK_EVENT = %s
                         AND (
-                            START_DATE = CAST(%s AS DATETIME)
-                            OR NAME = %s
+                            NAME = %s
+                            OR START_DATE = CAST(%s AS DATETIME)
                         )
                 """
-                cursor.execute(sql, (BroadcasterEnum.TV8.value, broadcast.fk_event,broadcast.start_date.isoformat(), broadcast.name))
+                cursor.execute(sql, (
+                    BroadcasterEnum.TV8.value,
+                    broadcast.fk_event,
+                    broadcast.name,
+                    broadcast.start_date.isoformat()
+                ))
                 res = cursor.fetchone()
                 
             broadcast_exists = res is not None
