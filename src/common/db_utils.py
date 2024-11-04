@@ -156,7 +156,7 @@ class DbUtils:
                 FROM
                     EVENT
                 WHERE
-                    START_DATE >= %s
+                    %s >= START_DATE
                     AND %s <= END_DATE 
             """
 
@@ -202,7 +202,7 @@ class DbUtils:
                         FK_BROADCASTER = %s 
                         AND FK_EVENT = %s
                         AND (
-                            CAST(START_DATE AS DATE) = CAST(%s AS DATE) 
+                            START_DATE = CAST(%s AS DATETIME)
                             OR NAME = %s
                         )
                 """
