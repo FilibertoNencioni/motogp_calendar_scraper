@@ -1,6 +1,8 @@
 import os
 from enum import Enum
 from datetime import datetime, timedelta
+import sys
+import traceback
 
 class LogType(Enum):
     INFO = 1
@@ -39,97 +41,96 @@ class Logger:
         with open(full_path, "a") as myfile:
             myfile.write(msg_line)
 
+
+    def log_exception(self, message:str):
+        ex_type, ex_value, ex_traceback = sys.exc_info() # Get current system exception
+        trace_back = traceback.extract_tb(ex_traceback)  # Extract unformatter stack traces as tuples
+
+        logger_msg = "An exception has occurred.\n"
+        logger_msg += f"\t\tException type: {ex_type}\n"
+        logger_msg += f"\t\tException message: {ex_value}\n"
+        logger_msg += f"\t\tMessage: {message}\n"
+        logger_msg += "\t\tStack Trace: "
+        
+        last_trace = trace_back[-1]
+        for trace in trace_back:
+            logger_msg += ("\n\t\t\tFile : %s ,\n\t\t\tLine : %d,\n\t\t\tFunc.Name : %s,\n\t\t\tMessage : %s" % (trace[0], trace[1], trace[2], trace[3]))
+            if(trace != last_trace):
+                logger_msg +="\n"
+                
+        self.log(logger_msg, LogType.ERROR)
+        
+
+
     def clear_logs(self):
-        try:
-            self.log("Managing old logs file...", LogType.INFO)
+        self.log("Managing old logs file...", LogType.INFO)
 
-            #Clear, based on what is saved in the ".env" file, the old logs
-            days_retention = os.getenv("LOG_DAYS_RETENTION", None)
-            max_logs = os.getenv("LOG_MAX_FILES", None)
+        #Clear, based on what is saved in the ".env" file, the old logs
+        days_retention = os.getenv("LOG_DAYS_RETENTION", None)
+        max_logs = os.getenv("LOG_MAX_FILES", None)
 
-            #Check if at least one of those two is setted, otherwise the user don't want to delete the old logs
-            if days_retention is None and max_logs is None:
-                #NO LOGS POLICY SPECIFIED
-                self.log("No logs to delete (No retention policy setted in the env file)", LogType.INFO)
+        #Check if at least one of those two is setted, otherwise the user don't want to delete the old logs
+        if days_retention is None and max_logs is None:
+            #NO LOGS POLICY SPECIFIED
+            self.log("No logs to delete (No retention policy setted in the env file)", LogType.INFO)
 
-            else:
-                #get all the logs files in the directory specified that ends with the suffix provided in the env file (soarted descending)
+        else:
+            #get all the logs files in the directory specified that ends with the suffix provided in the env file (soarted descending)
+            all_logs = sorted([f for f in os.listdir(self.log_path) if os.path.isfile(os.path.join(self.log_path, f)) and f.endswith(f"{self.log_file_suffix}.log")], reverse=True)
+
+            if days_retention is not None:
+                self.__clear_logs_delete_log_older_than(all_logs, datetime.now(), int(days_retention))    
+
+            if max_logs is not None:
+                #getting again the logs (if the prev step deleted some file it may interfere)
                 all_logs = sorted([f for f in os.listdir(self.log_path) if os.path.isfile(os.path.join(self.log_path, f)) and f.endswith(f"{self.log_file_suffix}.log")], reverse=True)
+                self.__clear_logs_delete_log_older_than(all_logs, int(max_logs))
 
-                if days_retention is not None:
-                    self.__clear_logs_delete_log_older_than(all_logs, datetime.now(), int(days_retention))    
+        self.log("Ended process (Managing old logs file)", LogType.INFO)
 
-                if max_logs is not None:
-                    #getting again the logs (if the prev step deleted some file it may interfere)
-                    all_logs = sorted([f for f in os.listdir(self.log_path) if os.path.isfile(os.path.join(self.log_path, f)) and f.endswith(f"{self.log_file_suffix}.log")], reverse=True)
-                    self.__clear_logs_delete_log_older_than(all_logs, int(max_logs))
-
-            self.log("Ended process (Managing old logs file)", LogType.INFO)
-
-        except:
-            self.log("Error during the cleaning process of logs files", LogType.ERROR)
-            raise
 
 
     def __clear_logs_delete_log_older_than(self, all_logs: list[str], date: datetime, days_to_keep: int) -> None:
-        try:
-            logs_to_keep: list[str]=[]
-            
-            #I'm going to cycle, starting from "date" param all the days backwards, if this exists in the logs i'm going to append this date in the "logs_to_keep" array
-            #After that i'm going to delete all the logs that are not in the "logs_to_keep" array.
-
-            tmp_days_added = 0
-            tmp_date = date
-
-            #cycling all the dates until "tmp_days_added" = 0
-            while tmp_days_added != days_to_keep:
-                tmp_date += timedelta(days=tmp_days_added)
-                formatted_string = tmp_date.strftime("%Y-%m-%d")
-
-                for log in all_logs:
-                    if log.startswith(formatted_string):
-                        logs_to_keep.append(log)
-
-                tmp_days_added += 1
-            
-            #deleting all the logs
-            for log in all_logs:
-                if not any(item == log for item in logs_to_keep):
-                    path_to_delete = os.path.join(self.log_path, log)
-                    os.remove(path=path_to_delete)
-
-                    self.log(f"\tDeleted log {log} in {path_to_delete}", LogType.INFO)
-
-        except:
-            msg = "Error getting the logs file older than n days.\n"
-            msg += f"\t\tall_logs: {", ".join(all_logs)}\n"
-            msg += f"\t\tdate: {date.strftime("%Y-%m-%d")}\n"
-            msg += f"\t\tdays_to_keep: {days_to_keep}"
-            self.log(msg, LogType.ERROR)
-            raise
+        logs_to_keep: list[str]=[]
         
+        #I'm going to cycle, starting from "date" param all the days backwards, if this exists in the logs i'm going to append this date in the "logs_to_keep" array
+        #After that i'm going to delete all the logs that are not in the "logs_to_keep" array.
 
-    def __clear_logs_delete_log_older_than(self, all_logs: list[str], max_files:int) -> None:
-        try:
-            logs_len = len(all_logs)
-            if logs_len <= max_files:
-                #NO LOGS TO DELETE
-                return
+        tmp_days_added = 0
+        tmp_date = date
 
-            #Get logs to delete
-            num_files_to_delete = logs_len - max_files
-            logs_to_delete = all_logs[-num_files_to_delete:]
+        #cycling all the dates until "tmp_days_added" = 0
+        while tmp_days_added != days_to_keep:
+            tmp_date += timedelta(days=tmp_days_added)
+            formatted_string = tmp_date.strftime("%Y-%m-%d")
 
-            for log in logs_to_delete:
+            for log in all_logs:
+                if log.startswith(formatted_string):
+                    logs_to_keep.append(log)
+
+            tmp_days_added += 1
+        
+        #deleting all the logs
+        for log in all_logs:
+            if not any(item == log for item in logs_to_keep):
                 path_to_delete = os.path.join(self.log_path, log)
                 os.remove(path=path_to_delete)
 
                 self.log(f"\tDeleted log {log} in {path_to_delete}", LogType.INFO)
+    
 
-        except:
-            msg = "Error getting the logs file older than n days.\n"
-            msg += f"\t\tall_logs: {", ".join(all_logs)}\n"
-            msg += f"\t\tmax_files: {max_files}"
-            self.log(msg, LogType.ERROR)
-            raise
-        
+    def __clear_logs_delete_log_older_than(self, all_logs: list[str], max_files:int) -> None:
+        logs_len = len(all_logs)
+        if logs_len <= max_files:
+            #NO LOGS TO DELETE
+            return
+
+        #Get logs to delete
+        num_files_to_delete = logs_len - max_files
+        logs_to_delete = all_logs[-num_files_to_delete:]
+
+        for log in logs_to_delete:
+            path_to_delete = os.path.join(self.log_path, log)
+            os.remove(path=path_to_delete)
+
+            self.log(f"\tDeleted log {log} in {path_to_delete}", LogType.INFO)
