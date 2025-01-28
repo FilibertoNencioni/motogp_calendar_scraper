@@ -41,7 +41,7 @@ def can_scrape():
     first_event_date = DbUtils.first_event_date_of_season(cursor)
     cursor.close()
 
-    if((datetime.today() + relativedelta(month=1)).date() < first_event_date):
+    if((datetime.today() + relativedelta(months=1)).date() < first_event_date):
         ResourceFactory.get_logger().log("The scraping processes will start a month before the first official event scheduled date", LogType.WARN)
         return False
     return True
