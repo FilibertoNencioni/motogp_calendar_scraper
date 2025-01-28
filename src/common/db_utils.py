@@ -11,15 +11,29 @@ class DbUtils:
 
 ##GENERAL
     @staticmethod
-    def check_if_has_official_data_for_season(cursor: MySQLCursorAbstract)->bool:
-        current_year = datetime.datetime.now().year
+    def has_official_data_for_season(cursor: MySQLCursorAbstract)->bool:
         sql = """
             SELECT COUNT(*) FROM EVENT
-            WHERE SEASON = %s
+            WHERE SEASON = YEAR(CURRENT_DATE())
         """
-        cursor.execute(sql, (current_year,))
+        cursor.execute(sql)
         res = cursor.fetchone()[0]
         return res > 0
+    
+    @staticmethod
+    def first_event_date_of_season(cursor: MySQLCursorAbstract) -> datetime.date:
+        sql = """
+            SELECT
+                MIN(START_DATE)
+            FROM	
+                EVENT
+            WHERE 
+                SEASON = YEAR(CURRENT_DATE())
+        """
+        cursor.execute(sql)
+        res = cursor.fetchone()[0]
+        return res
+
 
 
 ##CIRCUIT
