@@ -22,11 +22,6 @@ class Tv8Service:
         connection = ResourceFactory.get_db_connection()
         cursor = connection.cursor(buffered=True)
         
-        #Check if the official dates are in the DB so to know if the dates from TV8 website are updated for this season
-        if not DbUtils.check_if_has_official_data_for_season(cursor):
-            ResourceFactory.get_logger().log("No official Grand Prix dates available for this year. The process will end.\nTv8 service ended successfully", LogType.WARN)
-            return
-
         #Initialize parser for robots.txt (what you as a robot can do according to tv8 policy)
         rp = Tv8Service.__initialize_roboparser()
 
