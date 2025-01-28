@@ -41,20 +41,33 @@ class DbUtils:
 
             circuit_exists = res is not None
             if circuit_exists:
-                #TODO: manage overriding flag and placeholder paths if newer ones are NOT available
-                #UPDATE DATA (even if it's not changed)
+                #UPDATE DATA - even if it's not changed, except for FLAG and PLACEHOLDER paths
+                #those will be updated only if the incoming data is not None
                 sql = """
                     UPDATE CIRCUIT
                     SET
                         NAME = %s,
                         COUNTRY = %s,
-                        FLAG_PATH = %s,
-                        PLACEHOLDER_PATH = %s,
+                        {u1}
+                        {u2}
                         DOU = CURRENT_TIMESTAMP
                     WHERE
                         PK_CIRCUIT = %s
-                """
-                cursor.execute(sql, (circuit.name, circuit.country, circuit.flag_path, circuit.placeholder_path, res[0]))
+                """.format(
+                    u1 = "FLAG_PATH = %s," if circuit.flag_path is not None else "" ,
+                    u2 = "PLACEHOLDER_PATH = %s," if circuit.placeholder_path is not None else ""
+                )
+
+                data: tuple = (circuit.name, circuit.country,)
+
+                if circuit.flag_path is not None:
+                    data += (circuit.flag_path,)
+
+                if circuit.placeholder_path is not None:
+                    data += (circuit.placeholder_path,)
+
+                data += (res[0],)
+                cursor.execute(sql, data)
                 
                 return res[0]
             else:
@@ -143,7 +156,7 @@ class DbUtils:
                 FROM
                     EVENT
                 WHERE
-                    START_DATE >= %s
+                    %s >= START_DATE
                     AND %s <= END_DATE 
             """
 
@@ -189,11 +202,16 @@ class DbUtils:
                         FK_BROADCASTER = %s 
                         AND FK_EVENT = %s
                         AND (
-                            CAST(START_DATE AS DATE) = CAST(%s AS DATE) 
-                            OR NAME = %s
+                            NAME = %s
+                            OR START_DATE = CAST(%s AS DATETIME)
                         )
                 """
-                cursor.execute(sql, (BroadcasterEnum.TV8.value, broadcast.fk_event,broadcast.start_date.isoformat(), broadcast.name))
+                cursor.execute(sql, (
+                    BroadcasterEnum.TV8.value,
+                    broadcast.fk_event,
+                    broadcast.name,
+                    broadcast.start_date.isoformat()
+                ))
                 res = cursor.fetchone()
                 
             broadcast_exists = res is not None

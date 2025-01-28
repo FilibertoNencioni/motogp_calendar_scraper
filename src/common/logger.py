@@ -13,21 +13,19 @@ class Logger:
 
     def __init__(self) -> None:
         #Controllo prima se è stato fornito il path
-        tmp_path = os.getenv("LOG_PATH")
-        if tmp_path is None:
-            raise Exception("ERROR! Missing LOG_PATH env variable")
+        usr_path = os.getenv("LOG_PATH", os.path.join(os.getcwd(), "logs"))
         
         #Controllo inoltre se il path che è stato fornito esiste e se è una directory
         #nel caso in cui non esiste lo creo
-        if os.path.exists(tmp_path):
+        if os.path.exists(usr_path):
             #Controllo se è una cartella
-            if not os.path.isdir(tmp_path):
-                raise Exception(f"ERROR! The path given in LOG_PATH env variable ({tmp_path}) is not a directory")
+            if not os.path.isdir(usr_path):
+                raise Exception(f"ERROR! The path given in LOG_PATH env variable ({usr_path}) is not a directory")
         else:
             #creo la directory
-            os.makedirs(tmp_path)
+            os.makedirs(usr_path)
 
-        self.log_path = tmp_path
+        self.log_path = usr_path
         self.log_file_suffix = os.getenv("LOG_FILE_SUFFIX","MotoGpCalendarScraper")
 
 
@@ -71,7 +69,6 @@ class Logger:
         except:
             self.log("Error during the cleaning process of logs files", LogType.ERROR)
             raise
-
 
 
     def __clear_logs_delete_log_older_than(self, all_logs: list[str], date: datetime, days_to_keep: int) -> None:

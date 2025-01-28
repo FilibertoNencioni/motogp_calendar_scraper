@@ -42,7 +42,7 @@ You need to adjust the __.env__ file for the process to run successfully. This h
 
 ### Logs
 
-* LOG_PATH, *Path where the log files have to be saved*
+* LOG_PATH, ***optional***, *Path where the log files have to be saved. Default is: ``project_directory/logs``*
 * LOG_FILE_SUFFIX, ***optional**, Those log files are saved daily with a date prefix in the format "yyyy-mm-dd", If you want to add some text after the date, you can specify it here*
 * LOG_DAYS_RETENTION, ***optional**, Indicates the date range you want to keep the logs, it must be expressed as a number of days (int), for example, 30 (for a month)*
 * LOG_MAX_FILES= ***optional**, Indicates the maximum number of log files you want to keep*

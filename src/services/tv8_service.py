@@ -11,6 +11,7 @@ import datetime
 import re
 import dateparser
 from bs4 import BeautifulSoup
+import pytz
 
 class Tv8Service:
     base_url = 'https://www.tv8.it'
@@ -67,12 +68,13 @@ class Tv8Service:
 
                         is_live = dates["is_live"]
                         date = datetime.datetime.strptime(dates['date'], '%Y-%m-%d')
+                        timezone = pytz.timezone('Europe/Rome')
 
                         #This "event" corresponds to the broadcast event emitted by tv8
                         for event in dates['events'].keys():
                             #Add the broadcasts if exists otherwise update
                             time = event.split(":")
-                            event_date = date.replace(hour=int(time[0]), minute=int(time[1]))
+                            event_date = timezone.localize(date.replace(hour=int(time[0]), minute=int(time[1])))
                             event_name = dates['events'][event]
 
                             #Now I need to get in which category this broadcast belongs (ex. MotoGP or Moto2) 

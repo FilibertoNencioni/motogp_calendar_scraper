@@ -58,7 +58,8 @@ class MotoGpService:
                     
                     broadcast = Broadcast.from_motogp_service(json_broadcast, event.pk_event, found_category.pk_category)
                     DbUtils.check_broadcast(cursor, broadcast)
-                
+            
+            #TODO: check if some circuit has been skipped (event dismissed)
             connection.commit()
             ResourceFactory.get_logger().log("MotoGP service ended successfully")
         except:
