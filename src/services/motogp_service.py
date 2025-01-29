@@ -21,6 +21,7 @@ class MotoGpService:
         cursor = connection.cursor()
 
         try:
+            saved_events_guid = []
 
             for json_circuit in api_response:
                 if json_circuit["circuit"] is None:
@@ -42,6 +43,7 @@ class MotoGpService:
 
                 #Check if it exists in the database
                 pk_event = DbUtils.check_event(cursor, event)
+                saved_events_guid.append(event.guid)
                 event.pk_event = pk_event
 
                 
@@ -59,7 +61,10 @@ class MotoGpService:
                     broadcast = Broadcast.from_motogp_service(json_broadcast, event.pk_event, found_category.pk_category)
                     DbUtils.check_broadcast(cursor, broadcast)
             
-            #TODO: check if some circuit has been skipped (event dismissed)
+            #check if some circuit has been skipped (dismissed events)
+            if(len(saved_events_guid) > 0):
+                DbUtils.dismiss_events(cursor, saved_events_guid)
+
             connection.commit()
             ResourceFactory.get_logger().log("MotoGP service ended successfully")
         except:

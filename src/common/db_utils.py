@@ -29,6 +29,7 @@ class DbUtils:
                 EVENT
             WHERE 
                 SEASON = YEAR(CURRENT_DATE())
+                AND IS_DISMISSED = 0
         """
         cursor.execute(sql)
         res = cursor.fetchone()[0]
@@ -106,6 +107,7 @@ class DbUtils:
                     SEASON = %s,
                     START_DATE = %s,
                     END_DATE = %s,
+                    IS_DISMISSED = 0,
                     DOU = CURRENT_TIMESTAMP
                 WHERE
                     PK_EVENT = %s
@@ -151,10 +153,28 @@ class DbUtils:
             WHERE
                 %s >= START_DATE
                 AND %s <= END_DATE 
+            ORDER BY IS_DISMISSED ASC #Prioritize not dismissed events if exists
+            LIMIT 1
         """
 
         cursor.execute(sql, (date, date))
         return Event(*cursor.fetchone())
+
+    @staticmethod
+    def dismiss_events(cursor: MySQLCursorAbstract, guids: tuple[str]):
+        """This method can be used only for MotoGP data, this will get all the events GUID
+        and set those as 'dismissed'"""
+
+        sql = f"""
+            UPDATE
+                EVENT
+            SET
+                IS_DISMISSED = 1
+            WHERE
+                GUID NOT IN ({', '.join(f"'{guid}'" for guid in guids)})
+                AND SEASON = YEAR(CURRENT_DATE())
+        """
+        cursor.execute(sql)
 
 ##CATEGORY
     @staticmethod
