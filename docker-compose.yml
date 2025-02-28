@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  motogpcalendarscraper:
+    image: motogpcalendarscraper
+    build:
+      context: .
+      dockerfile: ./Dockerfile

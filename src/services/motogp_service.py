@@ -12,15 +12,16 @@ import requests
 class MotoGpService:
 
     def execute():
+        ResourceFactory.get_logger().log("Executing MotoGP service")
+
+        current_year = datetime.now().year
+        api_response = MotoGpService.make_request(current_year)
+
+        connection = ResourceFactory.get_db_connection()
+        cursor = connection.cursor()
+
         try:
-            ResourceFactory.get_logger().log("Executing MotoGP service")
-
-            current_year = datetime.now().year
-            api_response = MotoGpService.make_request(current_year)
-
-            connection = ResourceFactory.get_db_connection()
-            cursor = connection.cursor()
-
+            saved_events_guid = []
 
             for json_circuit in api_response:
                 if json_circuit["circuit"] is None:
@@ -42,6 +43,7 @@ class MotoGpService:
 
                 #Check if it exists in the database
                 pk_event = DbUtils.check_event(cursor, event)
+                saved_events_guid.append(event.guid)
                 event.pk_event = pk_event
 
                 
@@ -59,7 +61,10 @@ class MotoGpService:
                     broadcast = Broadcast.from_motogp_service(json_broadcast, event.pk_event, found_category.pk_category)
                     DbUtils.check_broadcast(cursor, broadcast)
             
-            #TODO: check if some circuit has been skipped (event dismissed)
+            #check if some circuit has been skipped (dismissed events)
+            if(len(saved_events_guid) > 0):
+                DbUtils.dismiss_events(cursor, saved_events_guid)
+
             connection.commit()
             ResourceFactory.get_logger().log("MotoGP service ended successfully")
         except:
@@ -69,24 +74,18 @@ class MotoGpService:
         
 
     def make_request(year: int):
-        try:
-            url = f"https://api.motogp.pulselive.com/motogp/v1/events?seasonYear={year}"
+        url = f"https://api.motogp.pulselive.com/motogp/v1/events?seasonYear={year}"
 
-            response = requests.get(url)
-            if response.status_code != 200:
-                msg = "HTTP request failed\n"
-                msg += f"\t\turl: {url}\n"
-                msg += f"\t\tstatus code: {response.status_code}\n"
-                msg += f"\t\treason phrase: {response.reason}"
-                raise Exception(msg)
-            
-            #Once I've the response i return it decoded
-            return response.json()
-        except:
-            msg = "An unexpected error occurred while calling the MotoGP API\n"
-            msg += f"\t\tyear: {year}"
-            ResourceFactory.get_logger().log(msg, LogType.ERROR)
-            raise 
+        response = requests.get(url)
+        if response.status_code != 200:
+            msg = "HTTP request failed\n"
+            msg += f"\t\turl: {url}\n"
+            msg += f"\t\tstatus code: {response.status_code}\n"
+            msg += f"\t\treason phrase: {response.reason}"
+            raise Exception(msg)
+        
+        #Once I've the response i return it decoded
+        return response.json()
         
 
     
