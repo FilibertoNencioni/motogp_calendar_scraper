@@ -147,7 +147,16 @@ class DbUtils:
     def get_event_by_date(cursor: MySQLCursorAbstract, date: str) -> Event | None:
         sql = """
             SELECT
-                *
+                PK_EVENT
+                , FK_CIRCUIT
+                , GUID
+                , NAME
+                , KIND
+                , SEASON
+                , START_DATE
+                , END_DATE
+                , DOI
+                , DOU
             FROM
                 EVENT
             WHERE
