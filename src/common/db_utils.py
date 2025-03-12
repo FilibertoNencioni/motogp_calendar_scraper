@@ -233,6 +233,7 @@ class DbUtils:
                 SET
                     FK_EVENT = %s,
                     FK_CATEGORY = %s,
+                    FK_KIND = %s,
                     NAME = %s,
                     START_DATE = %s,
                     END_DATE = %s,
@@ -243,6 +244,7 @@ class DbUtils:
             cursor.execute(sql, (
                 broadcast.fk_event, 
                 broadcast.fk_category, 
+                broadcast.fk_kind,
                 broadcast.name, 
                 broadcast.start_date.isoformat(), 
                 broadcast.end_date.isoformat() if broadcast.end_date else None, 
@@ -253,15 +255,16 @@ class DbUtils:
             #If it doesn't exists insert
             sql = """
                 INSERT INTO BROADCAST
-                    (FK_EVENT, FK_BROADCASTER, FK_CATEGORY, GUID, NAME, IS_LIVE, START_DATE, END_DATE)
+                    (FK_EVENT, FK_BROADCASTER, FK_CATEGORY, FK_KIND, GUID, NAME, IS_LIVE, START_DATE, END_DATE)
                 VALUES
-                    (%s,%s,%s,%s,%s,%s,%s,%s)
+                    (%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """
 
             cursor.execute(sql, (
                 broadcast.fk_event, 
                 broadcast.fk_broadcaster, 
                 broadcast.fk_category, 
+                broadcast.fk_kind, 
                 broadcast.guid, 
                 broadcast.name, 
                 broadcast.is_live,

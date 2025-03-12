@@ -1,3 +1,4 @@
+from common.enum.kind_enum import KindEnum
 from common.logger import LogType
 from common.resource_factory import ResourceFactory
 from common.db_utils import DbUtils
@@ -15,6 +16,25 @@ import pytz
 
 class Tv8Service:
     base_url = 'https://www.tv8.it'
+
+    categories_keywords = {
+        ("motogp", "moto gp", "mgp"): CategoryEnum.MOTOGP.value,
+        ("motoe", "moto e", "me"): CategoryEnum.MOTOE.value,
+        ("moto2", "moto 2", "m2"): CategoryEnum.MOTO2.value,
+        ("moto3", "moto 3", "m3"): CategoryEnum.MOTO3.value,
+    }
+
+    ### A list of words the event name should not contain to get the right kind
+    kind_blacklist = [
+        "paddock"
+        ,"post"
+        ,"pre"
+    ]
+
+    kind_keywords = {
+        ("qualifiche", "qualifica"): KindEnum.QUALIFYING.value,
+        ("sprint", "gara", "race"): KindEnum.RACE.value
+    }
 
     def execute():
         ResourceFactory.get_logger().log("Executing TV8 service")
@@ -73,12 +93,14 @@ class Tv8Service:
 
                         #Now I need to get in which category this broadcast belongs (ex. MotoGP or Moto2) 
                         category_pk: int | None = Tv8Service.__get_category_pk_from_title(event_name)
+                        kind_pk: int | None = Tv8Service.__get_kind_pk_from_title(event_name)
 
                         broadcast = Broadcast(
                             0,
                             off_event.pk_event,
                             BroadcasterEnum.TV8.value,
                             category_pk,
+                            kind_pk,
                             None,
                             event_name,
                             is_live,
@@ -102,16 +124,25 @@ class Tv8Service:
     def __get_category_pk_from_title(string: str) -> int | None:
         string = string.lower()
 
-        if "motogp" in string or "moto gp" in string:
-            return CategoryEnum.MOTOGP.value
-        elif "motoe" in string or "moto e" in string:
-            return CategoryEnum.MOTOE.value
-        elif "moto2" in string or "moto 2" in string:
-            return CategoryEnum.MOTO2.value
-        elif "moto3" in string or "moto 3" in string:
-            return CategoryEnum.MOTO3.value
-        else:
+        for key_set, category in Tv8Service.categories_keywords.items():
+            if any(keyword in string for keyword in key_set):
+                return category
+
+        return None  
+    
+    
+    def __get_kind_pk_from_title(string: str) -> int | None:
+        string = string.lower()
+
+        if any(word in string for word in Tv8Service.kind_blacklist):
             return None
+
+        #No word within blacklist found, start searching for kind
+        for key_set, kind in Tv8Service.kind_keywords.items():
+            if any(keyword in string for keyword in key_set):
+                return kind
+        return None
+
 
     def __initialize_roboparser() -> RobotFileParser:
         #Initialize parser for robots.txt (what you as a robot can do according to tv8 policy)
